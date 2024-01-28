@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -189,6 +190,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM7_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   BMP2_Init(&bmp2dev_1);// inicjalizacja czujnika
   HAL_TIM_Base_Start_IT(&htim2);// uruchomienie timerow
@@ -197,6 +199,12 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
   HAL_UART_Receive_IT(&huart3, UART_zadajnik, 3);
+
+  lcd_init(hi2c2);
+  lcd_send_string("HELL");
+  HAL_Delay(1000);
+  lcd_clear(hi2c2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
