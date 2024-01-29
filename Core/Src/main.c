@@ -75,7 +75,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-pid_t2 pid1={.param.Kp=1.2,.param.Ki=0.0002, .param.Kd=0,.param.dt=1.0, .previous_error=0,
+pid_t2 pid1={.param.Kp=1.5,.param.Ki=0.00002, .param.Kd=0.01,.param.dt=1.0, .previous_error=0,
 		.previous_integral=0, .max_output=800.0, .min_output=-800.0};
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -104,7 +104,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Regulator-PID
   if(htim == &htim7){
 
-    current_temp = newTemp;
   }
   else{
     		float pwm_duty_f= (999.0*calculate_discrete_pid(&pid1,zadane_obiektu,newTemp));
