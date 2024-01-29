@@ -27,8 +27,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <stdbool.h>
 #include "bmp2_config.h"
 #include "pid_regulator.h"
+#include "lcd_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,8 @@ unsigned int zadane_obiektu = 30000;
 uint32_t pulse_count;
 uint32_t pulse_count_prev;
 int Enc = 0;
-
+struct lcd_disp disp;
+unsigned int pier_ur = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,8 +75,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-pid_t2 pid1={.param.Kp=1.8,.param.Ki=0.000002, .param.Kd=1.0,.param.dt=1.0, .previous_error=0,
-		.previous_integral=0, .max_output=400.0, .min_output=-400.0};
+pid_t2 pid1={.param.Kp=1.2,.param.Ki=0.0002, .param.Kd=0,.param.dt=1.0, .previous_error=0,
+		.previous_integral=0, .max_output=800.0, .min_output=-800.0};
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim2)
@@ -110,8 +113,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     		//saturacja
     		if(pwm_duty_f<0)pwm_duty=0;else
-    		if(80000>pwm_duty_f)pwm_duty=pwm_duty_f/200;else
-    		if(pwm_duty_f>80000)pwm_duty=pwm_duty_f/400;else
+    		if(150000>pwm_duty_f)pwm_duty=pwm_duty_f/200;else
+    		if(pwm_duty_f>150000)pwm_duty=pwm_duty_f/800;else
     			pwm_duty=(uint16_t)pwm_duty_f;
     		RezystorTestDrive = pwm_duty;
 
@@ -154,6 +157,29 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 // HAL_UART_Receive_IT(&huart3,(uint8_t*)PWM , 6);
 //}
 
+
+void display_function()
+{
+	if(pier_ur){
+		lcd_clear(&disp);
+		sprintf((char*)disp.f_line, "Hubert");
+		sprintf((char*)disp.s_line, "Grzegorz");
+		lcd_display(&disp);
+		HAL_Delay(1000);
+		pier_ur = 0;
+	}
+	else
+	{
+		sprintf((char*)disp.f_line, "Temp. akt.:%d.%02d", newTemp / 1000, newTemp % 1000);
+		sprintf((char*)disp.s_line, "Temp. zad.:%d.%02d", zadane_obiektu / 1000, zadane_obiektu % 1000);
+		lcd_display(&disp);
+	}
+
+	HAL_Delay(2000);
+
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -190,7 +216,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM7_Init();
-  MX_I2C2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   BMP2_Init(&bmp2dev_1);// inicjalizacja czujnika
   HAL_TIM_Base_Start_IT(&htim2);// uruchomienie timerow
@@ -199,11 +225,10 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
   HAL_UART_Receive_IT(&huart3, UART_zadajnik, 3);
-
-  lcd_init(hi2c2);
-  lcd_send_string("HELL");
-  HAL_Delay(1000);
-  lcd_clear(hi2c2);
+  //wyswietlacz
+    disp.addr = (0x27 << 1);
+    disp.bl = true;
+    lcd_init(&disp);
 
   /* USER CODE END 2 */
 
